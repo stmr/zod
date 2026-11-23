@@ -66,3 +66,20 @@ test("async refine that uses value", async () => {
   expect(r2.success).toBe(true);
   expect(r2.data).toEqual("asdf123");
 });
+
+test("sync parse of a rejecting async refinement leaves no unhandled rejection", async () => {
+  const unhandled: unknown[] = [];
+  const onUnhandled = (e: unknown) => unhandled.push(e);
+  process.on("unhandledRejection", onUnhandled);
+  try {
+    const s = z.string().refine(async () => {
+      throw new Error("db down");
+    });
+    expect(() => s.safeParse("x")).toThrow(z.core.$ZodAsyncError);
+    expect(() => s.parse("x")).toThrow(z.core.$ZodAsyncError);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(unhandled).toEqual([]);
+  } finally {
+    process.off("unhandledRejection", onUnhandled);
+  }
+});

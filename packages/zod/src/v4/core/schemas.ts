@@ -252,6 +252,7 @@ export const $ZodType: core.$constructor<$ZodType> = /*@__PURE__*/ core.$constru
           const _ = ch._zod.check(payload as any) as any as ParsePayload;
 
           if (_ instanceof Promise && ctx?.async === false) {
+            _.catch(() => {});
             throw new core.$ZodAsyncError();
           }
           if (asyncResult || _ instanceof Promise) {
